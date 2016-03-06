@@ -8,13 +8,17 @@
 Player::Player(Side side) {
     // Will be set to true in test_minimax.cpp.
     testingMinimax = false;
-
+    gamebrd = new Board();
+    counter = 0;
+ 
     /* 
      * TODO: Do any initialization you need to do here (setting up the board,
      * precalculating things, etc.) However, remember that you will only have
      * 30 seconds.
      */
 }
+
+
 
 /*
  * Destructor for the player.
@@ -40,5 +44,45 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
      * TODO: Implement how moves your AI should play here. You should first
      * process the opponent's opponents move before calculating your own move
      */ 
+     
+    Move rand_move(0,0);
+    std::vector<Move> rand_moves;
+    Side cur_side;
+    Side nxt_side ;
+    
+    if (counter%2 == 0)
+    {
+		cur_side = BLACK;
+		nxt_side= WHITE;
+	}
+	else 
+	{
+		cur_side = WHITE;
+		nxt_side = BLACK;
+	}
+	 
+    gamebrd.doMove(opponentsMove, cur_side);
+    counter ++;
+     
+    for (int i = 0; i < 8; i++)
+    {
+		for (int j = 0; j < 8; j++)
+		{
+			rand_move = Move(i,j);
+			
+			rand_moves.push_back(rand_move);
+		}		
+	}
+	
+	
+	for (int i = 0; i < 64; i++)
+    {
+		if (gamebrd.checkMove(rand_moves[i], nxt_side)==true)
+        {
+		    gamebrd.doMove(rand_moves[i], nxt_side);
+	    }
+	}
+     
     return NULL;
 }
+
