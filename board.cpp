@@ -93,8 +93,8 @@ bool Board::checkMove(Move *m, Side side) {
                 do {
                     x += dx;
                     y += dy;
-                        std::cerr << "b111" << std::endl;
                 } while (onBoard(x, y) && get(other, x, y));
+
                 if (onBoard(x, y) && get(side, x, y)) return true;
             }
         }
@@ -180,26 +180,26 @@ void Board::setBoard(char data[]) {
     }
 }
 
+/*
+ * Finds and returns a vector of all legal moves that can be made on the
+ * current board state.
+ */
 vector<Move*> Board::legalMoves(Side side)
-
 {
-	vector<Move*> legalmoves;
-	
-	for (int i = 0; i < 8; i++)
+    vector<Move*> legalmoves;
+    for (int i = 0; i < 8; i++)
     {
-		for (int j = 0; j < 8; j++)
-		{
-            
-			Move* legalmove = new Move(i,j);
-			std::cerr << "legal white"<<countWhite() << std::endl;
-			if (checkMove(legalmove, side))
+        for (int j = 0; j < 8; j++) // loop through all board places
+        {
+            // memory allocated for each move, deallocated in player.cpp
+            Move* legalmove = new Move(i,j);
+            // std::cerr << "legal white "<< countWhite() << std::endl;
+            if (checkMove(legalmove, side)) // add to vector if move is legal
             {
-			    legalmoves.push_back(legalmove);
-		    }
-			 
-		}		
-	}
-	
-    std::cerr << legalmoves.size() << std::endl;
-	return legalmoves;
+                legalmoves.push_back(legalmove);
+            }
+        }		
+    }
+    std::cerr << "Number of Legal Moves: " << legalmoves.size() << std::endl;
+    return legalmoves;
 }

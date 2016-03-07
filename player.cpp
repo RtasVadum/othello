@@ -13,12 +13,12 @@ Player::Player(Side side) {
     my_side = side;
     if (side == WHITE)
     {
-		op_side = BLACK;
-	}
+        op_side = BLACK;
+    }
     else
     {
-		op_side = WHITE;
-	}
+        op_side = WHITE;
+    }
  
     /* 
      * TODO: Do any initialization you need to do here (setting up the board,
@@ -48,28 +48,39 @@ Player::~Player() {
  * return NULL.
  */
 Move *Player::doMove(Move *opponentsMove, int msLeft) {
-	/**make a small change*/
+    // make a small change
     /* 
      * TODO: Implement how moves your AI should play here. You should first
      * process the opponent's opponents move before calculating your own move
      */ 
      
     vector<Move*> rand_moves;
+    Move* myMove;
 
-    gamebrd.doMove(opponentsMove, op_side);
-    std::cerr << "black" <<gamebrd.countBlack()<< std::endl;
-    std::cerr << "white" <<gamebrd.countWhite()<< std::endl;
+    gamebrd.doMove(opponentsMove, op_side); // make the opponent's move
+    std::cerr << "black: " << gamebrd.countBlack() << std::endl;
+    std::cerr << "white: " << gamebrd.countWhite() << std::endl;
     rand_moves = gamebrd.legalMoves(my_side);
     
-    std::cerr << "black2: " <<gamebrd.countBlack()<< std::endl;
-    std::cerr << "white2: " <<gamebrd.countWhite()<< std::endl;
+    std::cerr << "black2: " << gamebrd.countBlack() << std::endl;
+    std::cerr << "white2: " << gamebrd.countWhite() << std::endl;
     
-    gamebrd.doMove(rand_moves[0], my_side);
-		
-	std::cerr << "11111" << std::endl;	
+    if (rand_moves.size() != 0) // if there are legal moves available
+    {
+        myMove = rand_moves[0]; // determine which move to make
+        gamebrd.doMove(myMove, my_side); // perform the move
+        for (unsigned int i = 0; i < rand_moves.size(); i++)
+        {
+            if (rand_moves[i]->x != myMove->x || rand_moves[i]->y != myMove->y)
+            {
+                delete rand_moves[i]; // free memory for other moves
+            }
+        }
+        return myMove;
+    }
 
-	
-	return NULL;
+    // std::cerr << "11111" << std::endl;;
+    return NULL;
      
 }
 
