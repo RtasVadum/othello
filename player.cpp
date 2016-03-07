@@ -1,4 +1,5 @@
 #include "player.h"
+using namespace std;
 
 /*
  * Constructor for the player; initialize everything here. The side your AI is
@@ -8,8 +9,16 @@
 Player::Player(Side side) {
     // Will be set to true in test_minimax.cpp.
     testingMinimax = false;
-    gamebrd = new Board();
     counter = 0;
+    my_side = side;
+    if (side == WHITE)
+    {
+		op_side = BLACK;
+	}
+    else
+    {
+		op_side = WHITE;
+	}
  
     /* 
      * TODO: Do any initialization you need to do here (setting up the board,
@@ -45,44 +54,22 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
      * process the opponent's opponents move before calculating your own move
      */ 
      
-    Move rand_move(0,0);
-    std::vector<Move> rand_moves;
-    Side cur_side;
-    Side nxt_side ;
+    vector<Move*> rand_moves;
+
+    gamebrd.doMove(opponentsMove, op_side);
+    std::cerr << "black" <<gamebrd.countBlack()<< std::endl;
+    std::cerr << "white" <<gamebrd.countWhite()<< std::endl;
+    rand_moves = gamebrd.legalMoves(my_side);
     
-    if (counter%2 == 0)
-    {
-		cur_side = BLACK;
-		nxt_side= WHITE;
-	}
-	else 
-	{
-		cur_side = WHITE;
-		nxt_side = BLACK;
-	}
-	 
-    gamebrd.doMove(opponentsMove, cur_side);
-    counter ++;
-     
-    for (int i = 0; i < 8; i++)
-    {
-		for (int j = 0; j < 8; j++)
-		{
-			rand_move = Move(i,j);
-			
-			rand_moves.push_back(rand_move);
-		}		
-	}
+    std::cerr << "black2: " <<gamebrd.countBlack()<< std::endl;
+    std::cerr << "white2: " <<gamebrd.countWhite()<< std::endl;
+    
+    gamebrd.doMove(rand_moves[0], my_side);
+		
+	std::cerr << "11111" << std::endl;	
+
 	
-	
-	for (int i = 0; i < 64; i++)
-    {
-		if (gamebrd.checkMove(rand_moves[i], nxt_side)==true)
-        {
-		    gamebrd.doMove(rand_moves[i], nxt_side);
-	    }
-	}
+	return NULL;
      
-    return NULL;
 }
 

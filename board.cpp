@@ -1,4 +1,5 @@
 #include "board.h"
+#include <iostream>
 
 /*
  * Make a standard 8x8 othello board and initialize it to the standard setup.
@@ -79,7 +80,7 @@ bool Board::checkMove(Move *m, Side side) {
 
     // Make sure the square hasn't already been taken.
     if (occupied(X, Y)) return false;
-
+  
     Side other = (side == BLACK) ? WHITE : BLACK;
     for (int dx = -1; dx <= 1; dx++) {
         for (int dy = -1; dy <= 1; dy++) {
@@ -92,8 +93,8 @@ bool Board::checkMove(Move *m, Side side) {
                 do {
                     x += dx;
                     y += dy;
+                        std::cerr << "b111" << std::endl;
                 } while (onBoard(x, y) && get(other, x, y));
-
                 if (onBoard(x, y) && get(side, x, y)) return true;
             }
         }
@@ -177,4 +178,28 @@ void Board::setBoard(char data[]) {
             taken.set(i);
         }
     }
+}
+
+vector<Move*> Board::legalMoves(Side side)
+
+{
+	vector<Move*> legalmoves;
+	
+	for (int i = 0; i < 8; i++)
+    {
+		for (int j = 0; j < 8; j++)
+		{
+            
+			Move* legalmove = new Move(i,j);
+			std::cerr << "legal white"<<countWhite() << std::endl;
+			if (checkMove(legalmove, side))
+            {
+			    legalmoves.push_back(legalmove);
+		    }
+			 
+		}		
+	}
+	
+    std::cerr << legalmoves.size() << std::endl;
+	return legalmoves;
 }
