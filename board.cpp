@@ -200,6 +200,6 @@ vector<Move*> Board::getLegalMoves(Side side)
             }
         }		
     }
-    std::cerr << "Number of Legal Moves: " << legalmoves.size() << std::endl;
+    // std::cerr << "Number of Legal Moves: " << legalmoves.size() << std::endl;
     return legalmoves;
 }

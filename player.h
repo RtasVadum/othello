@@ -20,10 +20,11 @@ public:
     // Flag to tell if the player is running within the test_minimax context
     bool testingMinimax;
     Board gamebrd;
-    int counter;
+    int moveCounter;
     Side my_side, op_side;
     vector<int> heuristicValues(vector<Move*> legalMoves);
     int getMaxIndex(vector<int> moveValues);
+    int minimax(Move *move, Board *myBoard, int depth, int ply);
 };
 
 #endif

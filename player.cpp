@@ -9,7 +9,7 @@ using namespace std;
 Player::Player(Side side) {
     // Will be set to true in test_minimax.cpp.
     testingMinimax = false;
-    counter = 0;
+    moveCounter = 0;
     my_side = side;
     if (side == WHITE)
     {
@@ -49,6 +49,8 @@ vector<int> Player::heuristicValues(vector<Move*> legalMoves)
     int movePos;
     for (unsigned int i = 0; i < legalMoves.size(); i++)
     {
+        Board* newBoard = gamebrd.copy();
+        newBoard->doMove(legalMoves[i], my_side);
         moveValue = 1;
         move = *legalMoves[i];
         movePos = move.getX() + 8 * move.getY();
@@ -68,6 +70,20 @@ vector<int> Player::heuristicValues(vector<Move*> legalMoves)
         else if (movePos == 9 || movePos == 49 || movePos == 14 || movePos == 54)
         {
             moveValue *= -5; // cells diagonally adjacent to corners bad
+        }
+        // include factor that handles piece count
+        int countDiff = newBoard->countBlack() - newBoard->countWhite();
+        if (my_side == WHITE) // if player is white, take negative of piece count
+        {
+            countDiff *= -1;
+        }
+        if (moveCounter < 15) // "evaporation" strategy in early game
+        {
+            moveValue -= 5 * countDiff;
+        }
+        else
+        {
+            moveValue += 5 * countDiff;
         }
         moveValues.push_back(moveValue);
     }
@@ -90,6 +106,49 @@ int Player::getMaxIndex(vector<int> moveValues)
         }
     }
     return index;
+}
+
+/*
+ * Implementation of a minimax algorithm used to determine which board
+ * move to make.
+ */
+int Player::minimax(Move *move, Board *myBoard, int depth, int ply)
+{
+    vector<Move*> possMoves;
+    if (ply > 0) // if my player's move
+    {
+        possMoves = myBoard->getLegalMoves(my_side);
+    }
+    else // opposing player's move
+    {
+        possMoves = myBoard->getLegalMoves(op_side);
+    }
+
+    if (depth <= 0 || possMoves.size() == 0) // base case
+    {
+        // get value of move
+        vector<Move*> singleMove;
+        singleMove.push_back(move);
+        vector<int> moveValue = heuristicValues(singleMove);
+        return moveValue[0] * ply;
+    }
+
+    int a = -1000000; // very low value, effectively negative infinity
+
+    if (ply > 0) // if my player's move
+    {
+        myBoard->doMove(move, my_side); // make move to update board
+    }
+    else // opposing player's move
+    {
+        myBoard->doMove(move, op_side); // make move to update board
+    }
+
+    for (unsigned int i = 0; i < possMoves.size(); i++) // recursive step
+    {
+        a = max(a, -minimax(possMoves[i], myBoard, depth - 1, -ply));
+    }
+    return a; 
 }
 
 
@@ -126,8 +185,16 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     
     if (legalMoves.size() != 0) // if there are legal moves available
     {
-        moveValues = heuristicValues(legalMoves);
-        myMove = legalMoves[getMaxIndex(moveValues)]; // determine which move to make
+        Board* myBoard = gamebrd.copy();
+        for (unsigned int i = 0; i < legalMoves.size(); i++)
+        {
+            // arbitrarily set depth to 3
+            moveValues.push_back(minimax(legalMoves[i], myBoard, 3, 1));
+        }
+        int index = getMaxIndex(moveValues);
+        myMove = legalMoves[index];
+        /*moveValues = heuristicValues(legalMoves);
+        myMove = legalMoves[getMaxIndex(moveValues)]; // determine which move to make*/
         gamebrd.doMove(myMove, my_side); // perform the move
         for (unsigned int i = 0; i < legalMoves.size(); i++)
         {
@@ -137,6 +204,9 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
                 delete legalMoves[i]; // free memory for other moves
             }
         }
+        delete myBoard;
+        moveCounter++;
+        std::cerr << moveCounter << std::endl;
         return myMove;
     }
 
