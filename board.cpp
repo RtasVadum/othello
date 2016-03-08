@@ -184,7 +184,7 @@ void Board::setBoard(char data[]) {
  * Finds and returns a vector of all legal moves that can be made on the
  * current board state.
  */
-vector<Move*> Board::legalMoves(Side side)
+vector<Move*> Board::getLegalMoves(Side side)
 {
     vector<Move*> legalmoves;
     for (int i = 0; i < 8; i++)

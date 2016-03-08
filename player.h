@@ -22,6 +22,8 @@ public:
     Board gamebrd;
     int counter;
     Side my_side, op_side;
+    vector<int> heuristicValues(vector<Move*> legalMoves);
+    int getMaxIndex(vector<int> moveValues);
 };
 
 #endif
