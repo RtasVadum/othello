@@ -50,9 +50,9 @@ vector<int> Player::heuristicValues(vector<Move*> legalMoves)
     for (unsigned int i = 0; i < legalMoves.size(); i++)
     {
         Board* newBoard = gamebrd.copy();
-        newBoard->doMove(legalMoves[i], my_side);
-        moveValue = 1;
         move = *legalMoves[i];
+        newBoard->doMove(&move, my_side);
+        moveValue = 1;
         movePos = move.getX() + 8 * move.getY();
         if (movePos == 8 || movePos == 1 || movePos == 48 || movePos == 6 || 
             movePos == 57 || movePos == 15 || movePos == 62 || movePos == 55)
@@ -86,9 +86,50 @@ vector<int> Player::heuristicValues(vector<Move*> legalMoves)
             moveValue += 5 * countDiff;
         }
         moveValues.push_back(moveValue);
+        delete newBoard;
     }
     return moveValues;
 }
+
+// BELOW HEURISTIC FUNCTIONS NOT YET IMPLEMENTED/INCLUDED IN ACTUAL CALCULATION
+/*
+ * Part of the Heuristic calcaultion that considers objective board position.
+ */
+int Player::positionHeuristic(Move move)
+{
+    int boardPos[64] = {
+         4, -3,  2,  2,  2,  2, -3,  4,
+        -3, -4, -1, -1, -1, -1, -4, -3,
+         2, -1,  1,  0,  0,  1, -1,  2,
+         2, -1,  0,  1,  1,  0, -1,  2,
+         2, -1,  0,  1,  1,  0, -1,  2,
+         2, -1,  1,  0,  0,  1, -1,  2,
+        -3, -4, -1, -1, -1, -1, -4, -3,
+         4, -3,  2,  2,  2,  2, -3,  4,
+    };
+    int movePos = move.getX() + 8 * move.getY();
+
+    return boardPos[movePos];
+}
+
+/*
+ * Part of the Heuristic calcaultion that considers whether the piece
+ * can be recaptured at a later time.
+ */
+int Player::stabilityHeuristic(Move move)
+{
+    return 0;
+}
+
+/*
+ * Part of the Heuristic calcaultion that considers how many moves would
+ * be possible in the new board position.
+ */
+int Player::mobilityHeuristic(Move move)
+{
+    return 0;
+}
+
 
 /*
  * Finds the maximum element of a list and returns the index of that element.
@@ -153,6 +194,58 @@ int Player::minimax(Move *move, Board *myBoard, int depth, int ply)
 
 
 /*
+ * Implementation of a minimax algorithm that also uses alpha-beta pruning
+ * to determine which move to make.
+ */
+int Player::minimaxAB(Move *move, Board *myBoard, int depth, int ply, int alpha, int beta)
+{
+    vector<Move*> possMoves; // possible moves that could be made
+    if (ply > 0) // if my player's move
+    {
+        possMoves = myBoard->getLegalMoves(my_side);
+    }
+    else // opposing player's move
+    {
+        possMoves = myBoard->getLegalMoves(op_side);
+    }
+
+    if (depth <= 0 || possMoves.size() == 0) // base case
+    {
+        // get value of move
+        vector<Move*> singleMove;
+        singleMove.push_back(move);
+        vector<int> moveValue = heuristicValues(singleMove);
+        return moveValue[0] * ply;
+    }
+
+    int score = -1000; // very low value, effectively negative infinity
+
+    if (ply > 0) // if my player's move
+    {
+        myBoard->doMove(move, my_side); // make move to update board
+    }
+    else // opposing player's move
+    {
+        myBoard->doMove(move, op_side); // make move to update board
+    }
+
+    for (unsigned int i = 0; i < possMoves.size(); i++) // recursive step
+    {
+        score = -minimaxAB(possMoves[i], myBoard, depth - 1, -ply, -beta, -alpha);
+        if (score > alpha)
+        {
+            alpha = score;
+        }
+        if (score >= beta)
+        {
+            break;
+        }
+    }
+    return score; 
+}
+
+
+/*
  * Compute the next move given the opponent's last move. Your AI is
  * expected to keep track of the board on its own. If this is the first move,
  * or if the opponent passed on the last move, then opponentsMove will be NULL.
@@ -176,26 +269,27 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
     Move* myMove;
 
     gamebrd.doMove(opponentsMove, op_side); // make the opponent's move
-    std::cerr << "black: " << gamebrd.countBlack() << std::endl;
-    std::cerr << "white: " << gamebrd.countWhite() << std::endl;
+    // std::cerr << "black: " << gamebrd.countBlack() << std::endl;
+    // std::cerr << "white: " << gamebrd.countWhite() << std::endl;
     
-    legalMoves = gamebrd.getLegalMoves(my_side);
-    std::cerr << "black2: " << gamebrd.countBlack() << std::endl;
-    std::cerr << "white2: " << gamebrd.countWhite() << std::endl;
+    legalMoves = gamebrd.getLegalMoves(my_side); // get possible moves
+    // std::cerr << "black2: " << gamebrd.countBlack() << std::endl;
+    // std::cerr << "white2: " << gamebrd.countWhite() << std::endl;
     
     if (legalMoves.size() != 0) // if there are legal moves available
     {
         Board* myBoard = gamebrd.copy();
         for (unsigned int i = 0; i < legalMoves.size(); i++)
         {
-            // arbitrarily set depth to 3
-            moveValues.push_back(minimax(legalMoves[i], myBoard, 3, 1));
+            // arbitrarily set minimax search depth to 3
+            //moveValues.push_back(minimax(legalMoves[i], myBoard, 3, 1));
+            moveValues.push_back(minimaxAB(legalMoves[i], myBoard, 5, 1, -1000000, 1000000));
         }
         int index = getMaxIndex(moveValues);
         myMove = legalMoves[index];
-        /*moveValues = heuristicValues(legalMoves);
-        myMove = legalMoves[getMaxIndex(moveValues)]; // determine which move to make*/
+
         gamebrd.doMove(myMove, my_side); // perform the move
+
         for (unsigned int i = 0; i < legalMoves.size(); i++)
         {
             if (legalMoves[i]->getX() != myMove->getX() || 
