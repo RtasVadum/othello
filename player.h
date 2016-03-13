@@ -6,6 +6,8 @@
 #include "stdio.h"
 #include "common.h"
 #include "board.h"
+#include "HashEntry.h"
+#include "HashMap.h"
 
 using namespace std;
 
@@ -31,6 +33,7 @@ public:
 
     int minimax(Move *move, Board *myBoard, int depth, int ply);
     int minimaxAB(Move *move, Board *myBoard, int depth, int ply, int alpha, int beta);
+    int iter_DDFS(int depth);
 };
 
 #endif

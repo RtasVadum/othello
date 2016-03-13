@@ -215,6 +215,7 @@ int Player::minimaxAB(Move *move, Board *myBoard, int depth, int ply, int alpha,
         vector<Move*> singleMove;
         singleMove.push_back(move);
         vector<int> moveValue = heuristicValues(singleMove);
+        //HashMap::put(myBoard, moveValue[0]);
         return moveValue[0] * ply;
     }
 
@@ -243,6 +244,16 @@ int Player::minimaxAB(Move *move, Board *myBoard, int depth, int ply, int alpha,
     }
     return score; 
 }
+
+int Player::iter_DDFS(int depth)
+{
+	int score = 0;
+	for (int i = 0; i < depth; i++)
+	{
+	}
+	return score;
+}
+
 
 
 /*
