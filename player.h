@@ -26,7 +26,7 @@ public:
     Side my_side, op_side;
 
     vector<int> heuristicValues(vector<Move*> legalMoves);
-    int positionHeuristic(Move move);
+    vector<int> positionHeuristic(vector<Move*> legalMoves);
     int getMaxIndex(vector<int> moveValues);
     int stabilityHeuristic(Move move);
     int mobilityHeuristic(Move move);

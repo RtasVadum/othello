@@ -95,21 +95,50 @@ vector<int> Player::heuristicValues(vector<Move*> legalMoves)
 /*
  * Part of the Heuristic calcaultion that considers objective board position.
  */
-int Player::positionHeuristic(Move move)
+vector<int> Player::positionHeuristic(vector<Move*> legalMoves)
 {
+	vector<int> moveValues;
+	int moveValue;
+    int movePos;
+    Move move = Move(-1, -1);
     int boardPos[64] = {
-         4, -3,  2,  2,  2,  2, -3,  4,
-        -3, -4, -1, -1, -1, -1, -4, -3,
-         2, -1,  1,  0,  0,  1, -1,  2,
-         2, -1,  0,  1,  1,  0, -1,  2,
-         2, -1,  0,  1,  1,  0, -1,  2,
-         2, -1,  1,  0,  0,  1, -1,  2,
-        -3, -4, -1, -1, -1, -1, -4, -3,
-         4, -3,  2,  2,  2,  2, -3,  4,
+         60, -10,  8,  6,  6,  8, -10,  60,
+        -10, -12, -1, -1, -1, -1, -12, -10,
+         8, -1,  1,  0,  0,  1, -1,  8,
+         6, -1,  0,  1,  1,  0, -1,  6,
+         6, -1,  0,  1,  1,  0, -1,  6,
+         8, -1,  1,  0,  0,  1, -1,  8,
+        -10, -24, -1, -1, -1, -1, -12, -10,
+         60, -10,  8,  6,  6,  8, -10,  60,
     };
-    int movePos = move.getX() + 8 * move.getY();
+    
+    for (unsigned int i = 0; i < legalMoves.size(); i++)
+   {
+        move = *legalMoves[i];
+        movePos = move.getX() + 8 * move.getY();
+        moveValue = boardPos[movePos];
+        
+        Board* newBoard = gamebrd.copy();
+        newBoard->doMove(&move, my_side);
+        
+                  // include factor that handles piece count
+        int countDiff = newBoard->countBlack() - newBoard->countWhite();
+        if (my_side == WHITE) // if player is white, take negative of piece count
+        {
+            countDiff *= -1;
+        }
 
-    return boardPos[movePos];
+        moveValue = moveValue + 0.05 *countDiff ;
+
+        moveValues.push_back(moveValue);
+        delete newBoard;
+        
+   }
+   
+   
+   
+
+    return moveValues;
 }
 
 /*
@@ -214,8 +243,8 @@ int Player::minimaxAB(Move *move, Board *myBoard, int depth, int ply, int alpha,
         // get value of move
         vector<Move*> singleMove;
         singleMove.push_back(move);
-        vector<int> moveValue = heuristicValues(singleMove);
-        //HashMap::put(myBoard, moveValue[0]);
+        //vector<int> moveValue = heuristicValues(singleMove);
+        vector<int> moveValue =positionHeuristic(singleMove);
         return moveValue[0] * ply;
     }
 
