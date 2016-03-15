@@ -320,9 +320,7 @@ int Player::minimax(Move *move, Board *myBoard, int depth, int ply)
  */
 int Player::minimaxAB(Move *move, Board *myBoard, int depth, int ply, int alpha, int beta)
 {
-    vector<Move*> possMoves; // possible moves that could be made
-    int score;
-
+    vector<Move*> possMoves;
     if (ply > 0) // if my player's move
     {
         possMoves = myBoard->getLegalMoves(my_side);
@@ -338,33 +336,40 @@ int Player::minimaxAB(Move *move, Board *myBoard, int depth, int ply, int alpha,
         vector<Move*> singleMove;
         singleMove.push_back(move);
         vector<int> moveValue = heuristicValues(singleMove);
-        // vector<int> moveValue = positionHeuristic(singleMove);
-        return moveValue[0] * ply;
+        return moveValue[0];
     }
+
+    int v = -1000000; // very low value, effectively negative infinity
 
     if (ply > 0) // if my player's move
     {
         myBoard->doMove(move, my_side); // make move to update board
+        for (unsigned int i = 0; i < possMoves.size(); i++) // recursive step
+        {
+			v = max(v, minimaxAB(possMoves[i], myBoard, alpha,beta, depth - 1, -ply));
+            alpha = max(alpha,v);
+            if (beta<alpha)
+            {
+				break ;
+			}
+        }
+        return v;
     }
     else // opposing player's move
     {
         myBoard->doMove(move, op_side); // make move to update board
+        for (unsigned int i = 0; i < possMoves.size(); i++) // recursive step
+        {
+			v = min(v, minimaxAB(possMoves[i], myBoard, depth - 1, -ply, alpha, beta));
+            beta = min(beta,v);
+            if (beta<alpha)
+            {
+				break; 
+			}
+		}
+		return beta; 
     }
 
-    for (unsigned int i = 0; i < possMoves.size(); i++) // recursive step
-    {
-        score = -minimaxAB(possMoves[i], myBoard, depth - 1, -ply, -beta, -alpha);
-        std::cerr << score << std::endl;
-        if (score > alpha)
-        {
-            alpha = score;
-        }
-        if (score >= beta)
-        {
-            return beta;
-        }
-    }
-    return alpha;
 }
 
 int Player::iter_DDFS(int depth)
