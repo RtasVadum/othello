@@ -3,7 +3,7 @@ Sources:
 Vaishnavi Sannidhanam and Muthukaruppan Annamalai, "An Analysis of Heuristics in Othello", Univeristy of Washington
 
 Contribution:
-Kevin: 
+Kevin: minimax with alpha-beta pruning, mobility heuristic, frontier heuristic, piece heuristic
 Sophie: random player, position heuristic function
 
 

@@ -6,8 +6,8 @@
 #include "stdio.h"
 #include "common.h"
 #include "board.h"
-#include "HashEntry.h"
-#include "HashMap.h"
+// #include "HashEntry.h"
+// #include "HashMap.h"
 
 using namespace std;
 
@@ -26,10 +26,11 @@ public:
     Side my_side, op_side;
 
     vector<int> heuristicValues(vector<Move*> legalMoves);
-    vector<int> positionHeuristic(vector<Move*> legalMoves);
     int getMaxIndex(vector<int> moveValues);
-    int stabilityHeuristic(Move move);
-    int mobilityHeuristic(Move move);
+    int positionHeuristic(Move move, Board *board);
+    int frontierHeuristic(Move move, Board *newBoard);
+    int mobilityHeuristic(Move move, Board *board);
+    int pieceHeuristic(Move move, Board* newBoard);
 
     int minimax(Move *move, Board *myBoard, int depth, int ply);
     int minimaxAB(Move *move, Board *myBoard, int depth, int ply, int alpha, int beta);

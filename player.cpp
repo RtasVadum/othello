@@ -45,15 +45,25 @@ vector<int> Player::heuristicValues(vector<Move*> legalMoves)
 {
     vector<int> moveValues;
     Move move = Move(-1, -1);
-    int moveValue;
-    int movePos;
+    double moveValue;
+    int pieceDiff;
+    double mobility, position, frontier;
+
     for (unsigned int i = 0; i < legalMoves.size(); i++)
     {
         Board* newBoard = gamebrd.copy();
         move = *legalMoves[i];
         newBoard->doMove(&move, my_side);
-        moveValue = 1;
-        movePos = move.getX() + 8 * move.getY();
+        moveValue = 0;
+
+        mobility = mobilityHeuristic(move, newBoard);
+        position = positionHeuristic(move, newBoard);
+        frontier = frontierHeuristic(move, newBoard);
+        pieceDiff = pieceHeuristic(move, newBoard);
+
+        moveValue += position + 8 * mobility + 7 * frontier + pieceDiff;
+
+        /*movePos = move.getX() + 8 * move.getY();
         if (movePos == 8 || movePos == 1 || movePos == 48 || movePos == 6 || 
             movePos == 57 || movePos == 15 || movePos == 62 || movePos == 55)
         {
@@ -84,23 +94,19 @@ vector<int> Player::heuristicValues(vector<Move*> legalMoves)
         else
         {
             moveValue += 5 * countDiff;
-        }
+        }*/
+
         moveValues.push_back(moveValue);
         delete newBoard;
     }
     return moveValues;
 }
 
-// BELOW HEURISTIC FUNCTIONS NOT YET IMPLEMENTED/INCLUDED IN ACTUAL CALCULATION
 /*
  * Part of the Heuristic calcaultion that considers objective board position.
  */
-vector<int> Player::positionHeuristic(vector<Move*> legalMoves)
+int Player::positionHeuristic(Move move, Board* newBoard)
 {
-	vector<int> moveValues;
-	int moveValue;
-    int movePos;
-    Move move = Move(-1, -1);
     int boardPos[64] = {
          60, -10,  8,  6,  6,  8, -10,  60,
         -10, -12, -1, -1, -1, -1, -12, -10,
@@ -111,53 +117,139 @@ vector<int> Player::positionHeuristic(vector<Move*> legalMoves)
         -10, -24, -1, -1, -1, -1, -12, -10,
          60, -10,  8,  6,  6,  8, -10,  60,
     };
-    
-    for (unsigned int i = 0; i < legalMoves.size(); i++)
-   {
-        move = *legalMoves[i];
-        movePos = move.getX() + 8 * move.getY();
-        moveValue = boardPos[movePos];
-        
-        Board* newBoard = gamebrd.copy();
-        newBoard->doMove(&move, my_side);
-        
-                  // include factor that handles piece count
-        int countDiff = newBoard->countBlack() - newBoard->countWhite();
-        if (my_side == WHITE) // if player is white, take negative of piece count
-        {
-            countDiff *= -1;
-        }
 
-        moveValue = moveValue + 0.05 *countDiff ;
+    int movePos = move.getX() + 8 * move.getY();
 
-        moveValues.push_back(moveValue);
-        delete newBoard;
-        
-   }
-   
-   
-   
-
-    return moveValues;
+    return boardPos[movePos];
 }
 
 /*
- * Part of the Heuristic calcaultion that considers whether the piece
- * can be recaptured at a later time.
+ * Part of the Heuristic calcaultion that considers the number of frontier
+ * squares, which translates to mobility for the opponent and is thus
+ * undesirable.
  */
-int Player::stabilityHeuristic(Move move)
+int Player::frontierHeuristic(Move move, Board *newBoard)
 {
-    return 0;
+    // two lists used for iterating through the squares adjacent to a center
+    int xChanges[8] = {-1, -1, -1, 0, 0, 1, 1, 1};
+    int yChanges[8] = {-1, 0, 1, -1, 1, -1, 0, 1};
+    int xCoord;
+    int yCoord;
+    int myCount = 0;
+    int opCount = 0;
+    double frontier;
+    // iterate through all board spaces to check if it is a frontier square
+    for (int i = 0; i < 8; i++)
+    {
+        for (int j = 0; j < 8; j++)
+        {
+            for (int k = 0; k < 8; k++)
+            {
+                xCoord = i + xChanges[k];
+                yCoord = j + yChanges[k];
+                if (xCoord >= 0 && xCoord <= 7 && yCoord >= 0 && yCoord <= 7)
+                {
+                    if (newBoard->get(my_side, xCoord, yCoord))
+                    {
+                        myCount++;
+                        break;
+                    }
+                    else if (newBoard->get(op_side, xCoord, yCoord))
+                    {
+                        opCount++;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    if (myCount + opCount != 0)
+    {
+        frontier = 100 * (opCount - myCount) / (myCount + opCount);
+    }
+    else
+    {
+        frontier = 0;
+    }
+
+    return frontier;
 }
 
 /*
  * Part of the Heuristic calcaultion that considers how many moves would
- * be possible in the new board position.
+ * be possible in the new board position, and is thus desirable.
  */
-int Player::mobilityHeuristic(Move move)
+int Player::mobilityHeuristic(Move move, Board* newBoard)
 {
-    return 0;
+    vector<Move*> myMoves = newBoard->getLegalMoves(my_side);
+    vector<Move*> opMoves = newBoard->getLegalMoves(op_side);
+
+    unsigned int myCount = myMoves.size();
+    unsigned int opCount = opMoves.size();
+
+    double mobility;
+
+    if (myCount + opCount != 0)
+    {
+        mobility = 100.0 * (myCount - opCount) / (myCount + opCount);
+    }
+    else
+    {
+        mobility = 0;
+    }
+
+    return mobility;
 }
+
+int Player::pieceHeuristic(Move move, Board* newBoard)
+{
+    double pieceDiff;
+    int myCount, opCount;
+
+    if (my_side == WHITE)
+    {
+        myCount = newBoard->countWhite();
+        opCount = newBoard->countBlack();
+    }
+    else
+    {
+        myCount = newBoard->countBlack();
+        opCount = newBoard->countWhite();
+    }
+    
+    if (myCount + opCount != 0)
+    {
+       pieceDiff = 100 * (myCount - opCount) / (myCount + opCount);
+    }
+    else
+    {
+        pieceDiff = 0;
+    }
+
+    /*// if there is a winning move, make it
+    if (newBoard->countBlack() == 0 || newBoard->countWhite() == 0)
+    {
+        pieceDiff = 100000;
+    }
+
+    // if there is a losing move, try not to make it
+    Board* tempBoard = newBoard->copy();
+    vector<Move*> legalMoves = tempBoard->getLegalMoves(op_side);
+    for (unsigned int i = 0; i < legalMoves.size(); i++)
+    {
+        move = *legalMoves[i];
+        tempBoard->doMove(&move, my_side);
+        if (tempBoard->countWhite() == 0 || tempBoard->countBlack() == 0)
+        {
+            pieceDiff = 100000;
+            break;
+        }
+    }
+    delete tempBoard;*/
+    
+    return pieceDiff;
+}
+
 
 
 /*
@@ -229,6 +321,8 @@ int Player::minimax(Move *move, Board *myBoard, int depth, int ply)
 int Player::minimaxAB(Move *move, Board *myBoard, int depth, int ply, int alpha, int beta)
 {
     vector<Move*> possMoves; // possible moves that could be made
+    int score;
+
     if (ply > 0) // if my player's move
     {
         possMoves = myBoard->getLegalMoves(my_side);
@@ -243,12 +337,10 @@ int Player::minimaxAB(Move *move, Board *myBoard, int depth, int ply, int alpha,
         // get value of move
         vector<Move*> singleMove;
         singleMove.push_back(move);
-        //vector<int> moveValue = heuristicValues(singleMove);
-        vector<int> moveValue =positionHeuristic(singleMove);
+        vector<int> moveValue = heuristicValues(singleMove);
+        // vector<int> moveValue = positionHeuristic(singleMove);
         return moveValue[0] * ply;
     }
-
-    int score = -1000; // very low value, effectively negative infinity
 
     if (ply > 0) // if my player's move
     {
@@ -262,16 +354,17 @@ int Player::minimaxAB(Move *move, Board *myBoard, int depth, int ply, int alpha,
     for (unsigned int i = 0; i < possMoves.size(); i++) // recursive step
     {
         score = -minimaxAB(possMoves[i], myBoard, depth - 1, -ply, -beta, -alpha);
+        std::cerr << score << std::endl;
         if (score > alpha)
         {
             alpha = score;
         }
         if (score >= beta)
         {
-            break;
+            return beta;
         }
     }
-    return score; 
+    return alpha;
 }
 
 int Player::iter_DDFS(int depth)
@@ -321,9 +414,9 @@ Move *Player::doMove(Move *opponentsMove, int msLeft) {
         Board* myBoard = gamebrd.copy();
         for (unsigned int i = 0; i < legalMoves.size(); i++)
         {
-            // arbitrarily set minimax search depth to 3
-            //moveValues.push_back(minimax(legalMoves[i], myBoard, 3, 1));
-            moveValues.push_back(minimaxAB(legalMoves[i], myBoard, 5, 1, -1000000, 1000000));
+            // arbitrarily set minimax search depth to 5
+            // moveValues.push_back(minimax(legalMoves[i], myBoard, 6, 1));
+            moveValues.push_back(minimaxAB(legalMoves[i], myBoard, 6, 1, -100000000, 100000000));
         }
         int index = getMaxIndex(moveValues);
         myMove = legalMoves[index];
