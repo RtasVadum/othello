@@ -61,7 +61,17 @@ vector<int> Player::heuristicValues(vector<Move*> legalMoves)
         frontier = frontierHeuristic(move, newBoard);
         pieceDiff = pieceHeuristic(move, newBoard);
 
-        moveValue += position + 8 * mobility + 7 * frontier + pieceDiff;
+        if (moveCounter < 52)
+        {
+			moveValue += 2*position + 0.05*mobility -frontier -pieceDiff;
+			// earlier in the game it is better to have less piece
+		}
+        else
+        {
+			moveValue += 2*position + 0.05*mobility +0.4*frontier +0.4*pieceDiff;
+		}
+       
+
 
         /*movePos = move.getX() + 8 * move.getY();
         if (movePos == 8 || movePos == 1 || movePos == 48 || movePos == 6 || 
@@ -108,14 +118,14 @@ vector<int> Player::heuristicValues(vector<Move*> legalMoves)
 int Player::positionHeuristic(Move move, Board* newBoard)
 {
     int boardPos[64] = {
-         60, -10,  8,  6,  6,  8, -10,  60,
+         70, -10,  8,  6,  6,  8, -10,  70,
         -10, -12, -1, -1, -1, -1, -12, -10,
          8, -1,  1,  0,  0,  1, -1,  8,
          6, -1,  0,  1,  1,  0, -1,  6,
          6, -1,  0,  1,  1,  0, -1,  6,
          8, -1,  1,  0,  0,  1, -1,  8,
         -10, -24, -1, -1, -1, -1, -12, -10,
-         60, -10,  8,  6,  6,  8, -10,  60,
+         70, -10,  8,  6,  6,  8, -10,  70,
     };
 
     int movePos = move.getX() + 8 * move.getY();
@@ -179,19 +189,20 @@ int Player::frontierHeuristic(Move move, Board *newBoard)
  * Part of the Heuristic calcaultion that considers how many moves would
  * be possible in the new board position, and is thus desirable.
  */
-int Player::mobilityHeuristic(Move move, Board* newBoard)
+double Player::mobilityHeuristic(Move move, Board* newBoard)
 {
     vector<Move*> myMoves = newBoard->getLegalMoves(my_side);
     vector<Move*> opMoves = newBoard->getLegalMoves(op_side);
 
-    unsigned int myCount = myMoves.size();
-    unsigned int opCount = opMoves.size();
+    double myCount = myMoves.size();
+    double opCount = opMoves.size();
 
     double mobility;
 
     if (myCount + opCount != 0)
     {
         mobility = 100.0 * (myCount - opCount) / (myCount + opCount);
+
     }
     else
     {

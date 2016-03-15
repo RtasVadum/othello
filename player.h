@@ -29,7 +29,7 @@ public:
     int getMaxIndex(vector<int> moveValues);
     int positionHeuristic(Move move, Board *board);
     int frontierHeuristic(Move move, Board *newBoard);
-    int mobilityHeuristic(Move move, Board *board);
+    double mobilityHeuristic(Move move, Board *board);
     int pieceHeuristic(Move move, Board* newBoard);
 
     int minimax(Move *move, Board *myBoard, int depth, int ply);
